@@ -95,6 +95,8 @@ func getProcMeminfoVars() (*memVars, error) {
 					field.Set(reflect.ValueOf(optionalUint64{Present: true, Value: value}))
 				} else if field.Kind() == reflect.Uint64 {
 					field.Set(reflect.ValueOf(value))
+				} else {
+					panic("invalid field type")
 				}
 			}
 		}

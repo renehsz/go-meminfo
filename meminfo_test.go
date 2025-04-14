@@ -2,6 +2,7 @@
 package meminfo
 
 import (
+	"log"
 	"reflect"
 	"testing"
 )
@@ -12,6 +13,7 @@ func TestGetMeminfoNonzero(t *testing.T) {
 		t.Fatalf("Error getting memory info: %v", err)
 	}
 	checkFieldsPresentAndNonZero(t, reflect.ValueOf(*m))
+	log.Printf("MemInfo: %+v", *m)
 }
 
 // checkFieldsPresentAndNonZero is a test helper that checks if all values
