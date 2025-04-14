@@ -27,11 +27,6 @@ func getMemInfo() (*MemInfo, error) {
 // /proc/meminfo-based implementation
 //
 
-type optionalUint64 struct {
-	Present bool
-	Value   uint64
-}
-
 // memVars holds the parsed values from /proc/meminfo
 type memVars struct {
 	MemTotal     uint64

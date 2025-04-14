@@ -46,20 +46,3 @@ func TestGetProcMemInfoVars(t *testing.T) {
 	checkFieldsPresentAndNonZero(t, reflect.ValueOf(*vars))
 }
 
-func checkFieldsPresentAndNonZero(t *testing.T, rv reflect.Value) {
-	// Check if all fields are set (present and non-zero)
-	numFields := rv.NumField()
-	for i := 0; i < numFields; i++ {
-		field := rv.Field(i)
-		if field.Kind() == reflect.Struct {
-			ou := field.Interface().(optionalUint64)
-			if ou.Present == false || ou.Value == 0 {
-				t.Errorf("Expected %s to be present", rv.Type().Field(i).Name)
-			}
-		} else if field.Kind() == reflect.Uint64 {
-			if field.Uint() == 0 {
-				t.Errorf("Expected %s to be non-zero", rv.Type().Field(i).Name)
-			}
-		}
-	}
-}
