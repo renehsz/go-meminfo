@@ -4,9 +4,7 @@
 package meminfo
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -62,53 +60,17 @@ func getFromProcMemInfo() (*MemInfo, error) {
 }
 
 func getProcMeminfoVars() (*memVars, error) {
-	// Read /proc/meminfo
-	f, err := os.Open("/proc/meminfo")
-	if err != nil {
-		// TODO: any fallbacks?
-		return nil, err
-	}
-	defer f.Close()
 	var vars memVars
 	rv := reflect.ValueOf(&vars)
-	numFieldsLeft := reflect.Indirect(rv).NumField()
-
-	// Parse line by line
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		if numFieldsLeft == 0 {
-			break
-		}
-
-		key, value, err := parseLine(scanner.Text())
-		if err != nil {
-			continue
-		}
-
-		// Check if the key is one of the fields in memVars and set the value accordingly
-		for i := 0; i < reflect.Indirect(rv).NumField(); i++ {
-			fieldName := reflect.Indirect(rv).Type().Field(i).Name
-			field := reflect.Indirect(rv).Field(i)
-			if key == fieldName {
-				numFieldsLeft--
-				if field.Kind() == reflect.Struct {
-					field.Set(reflect.ValueOf(optionalUint64{Present: true, Value: value}))
-				} else if field.Kind() == reflect.Uint64 {
-					field.Set(reflect.ValueOf(value))
-				} else {
-					panic("invalid field type")
-				}
-			}
-		}
-	}
-	if err := scanner.Err(); err != nil {
+	// Read from /proc/meminfo
+	if err := readFileVarsIntoStruct("/proc/meminfo", parseLineFromProcMeminfo, rv); err != nil {
 		return nil, err
 	}
 	return &vars, nil
 }
 
-// parseLine parses a line from /proc/meminfo and returns the key and value in bytes.
-func parseLine(line string) (string, uint64, error) {
+// parseLineFromProcMeminfo parses a line from /proc/meminfo and returns the key and value in bytes.
+func parseLineFromProcMeminfo(line string) (string, uint64, error) {
 	lineParts := strings.SplitN(line, ":", 2)
 	if len(lineParts) != 2 {
 		return "", 0, fmt.Errorf("invalid line format: \"%s\"; couldn't split line", line)
