@@ -69,22 +69,22 @@ func getProcMeminfoVars() (*memVars, error) {
 	return &vars, nil
 }
 
-// parseLineFromProcMeminfo parses a line from /proc/meminfo and returns the key and value in bytes.
-func parseLineFromProcMeminfo(line string) (string, uint64, error) {
+// parseLineFromProcMeminfo parses a line from /proc/meminfo and returns the file variable (key and value in bytes or pages).
+func parseLineFromProcMeminfo(line string) ([]fileVar, error) {
 	lineParts := strings.SplitN(line, ":", 2)
 	if len(lineParts) != 2 {
-		return "", 0, fmt.Errorf("invalid line format: \"%s\"; couldn't split line", line)
+		return nil, fmt.Errorf("invalid line format: \"%s\"; couldn't split line", line)
 	}
 
 	key := strings.TrimSpace(lineParts[0])
 	valueParts := strings.SplitN(strings.TrimSpace(lineParts[1]), " ", 2)
 	if len(valueParts) < 1 || len(valueParts) > 2 {
-		return "", 0, fmt.Errorf("invalid value format: \"%s\"; couldn't parse value", line)
+		return nil, fmt.Errorf("invalid value format: \"%s\"; couldn't parse value", line)
 	}
 
 	value, err := strconv.ParseUint(strings.TrimSpace(valueParts[0]), 10, 64)
 	if err != nil {
-		return "", 0, fmt.Errorf("invalid value format: \"%s\"; couldn't parse value as integer: %v", line, err)
+		return nil, fmt.Errorf("invalid value format: \"%s\"; couldn't parse value as integer: %v", line, err)
 	}
 	var valueUnit uint64 = 1
 	valueUnitStr := strings.TrimSpace(valueParts[1])
@@ -99,7 +99,9 @@ func parseLineFromProcMeminfo(line string) (string, uint64, error) {
 	}
 	value = value * valueUnit
 
-	return key, value, nil
+	return []fileVar{
+		fileVar { key, value },
+	}, nil
 }
 
 //
